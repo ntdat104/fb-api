@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Hello world</title>
+</head>
+
+<script src="/socket.io/socket.io.js"></script>
+<script>
+    var socket = io();
+    function joinchat() {
+        socket.emit('joinchat', { _id: document.getElementById('_id').value });
+    };
+    function sendMessage() {
+        var sender = document.getElementById('sender').value;
+        var receiver = document.getElementById('receiver').value;
+        var message = document.getElementById('message').value;
+        var conversation_id = document.getElementById('conversation_id').value;
+        var _id = document.getElementById('_id').value;
+        if (sender && receiver && message && _id) {
+            socket.emit('send', { message, sender, receiver, _id, conversation_id });
+            document.getElementById('message').value = "";
+        }
+    }
+    function deleteMessage() {
+        var sender = document.getElementById('sender').value;
+        var receiver = document.getElementById('receiver').value;
+        var message_id = document.getElementById('message_id').value;
+        var conversation_id = document.getElementById('conversation_id').value;
+        var _id = document.getElementById('_id').value;
+        if (sender && receiver && message && _id) {
+            socket.emit('deletemessage', { message, sender, receiver, _id, conversation_id, message_id });
+            document.getElementById('message_id').value = "";
+        }
+    }
+    socket.on('joinedchat', function (data) {
+        var a = "";
+        data.chats && data.chats.map(e => {
+            a += '<div>' + e.sender + ' sent a\
+          message to '+ e.receiver + ': ' + e.message + '</div>'
+        })
+        // sender = data.sender;
+        document.body.innerHTML = '<div>Sender: <input type = "text" value=' + data._id + ' id = "sender"></div>\
+      <div>Receiver: <input type = "text" id = "receiver"></div>\
+      <div>Message: <input type = "text" value="message default" id = "message"></div>\
+      <div>conversation_id: <input type = "text" value="5fca31d891c746137c44f52f" id = "conversation_id"></div>\
+      <div>_id: <input type = "text" id = "_id" value='+ data._id + ' disable>\
+         <button type = "button" name = "button" onclick = "sendMessage()">Send</button>\
+         <div id = "message-container"></div>\
+        <div>Message_id: <input type = "text" id = "message_id"></div>\
+         <button type = "button" name = "button" onclick = "deleteMessage()">Delete</button>\
+         <div id = "message-container"></div>\
+         <div id="chat">'+ a + '</div>';
+    });
+    socket.on("reconnecting", data => {
+        console.log("reconnecting");
+    })
+
+    socket.on("onmessage", data => {
+        console.log("onmessage" + data)
+        document.getElementById('chat').innerHTML += '<div>' + data.sender + ' sent a\
+          message to '+ data.receiver + ': ' + data.message + '</div>'
+    })
+</script>
+
+<body>
+    <input id="_id" type="text" name="_id" value="" placeholder="Enter your _id!">
+    <button type="button" name="button" onclick="joinchat()">
+        Join a _id to chat!
+    </button>
+
+</body>
+
+</html>
